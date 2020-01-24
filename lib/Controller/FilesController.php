@@ -31,7 +31,10 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use OCP\Files\IRootFolder;
+use OCP\IPreview;
 use OCP\IRequest;
+use OCP\ITagManager;
+use OCP\ITags;
 
 class FilesController extends Controller {
 
@@ -39,11 +42,25 @@ class FilesController extends Controller {
 	private $rootFolder;
 	/** @var string */
 	private $userId;
+	/**
+	 * @var IPreview
+	 */
+	private $previewManager;
+	/**
+	 * @var ITagManager
+	 */
+	private $tagManager;
 
-	public function __construct(IRequest $request, IRootFolder $rootFolder, string $userId) {
+	public function __construct(IRequest $request,
+								IRootFolder $rootFolder,
+								string $userId,
+								IPreview $previewManager,
+								ITagManager $tagManager) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->rootFolder = $rootFolder;
 		$this->userId = $userId;
+		$this->previewManager = $previewManager;
+		$this->tagManager = $tagManager;
 	}
 
 	/**
@@ -54,7 +71,9 @@ class FilesController extends Controller {
 		$nodes = $this->getNodes($dir);
 		$nodes = $this->offsetAndLimit($nodes, $offset, $limit);
 
-		return $this->formatNodes($nodes);
+		$tagger = $this->tagManager->load('files');
+
+		return $this->formatNodes($nodes, $tagger);
 	}
 
 	private function getNodes(string $dir): iterable {
@@ -90,26 +109,40 @@ class FilesController extends Controller {
 		}
 	}
 
-	private function formatNodes(iterable $nodes): JSONResponse {
+	private function formatNodes(iterable $nodes, ITags $tagger): JSONResponse {
 		$result = [];
 
 		foreach ($nodes as $node) {
-			$result[] = $this->formatNode($node);
+			$tags = $tagger->getTagsForObjects([$node->getId()]);
+			$favorite = false;
+			if (isset($tags[$node->getId()])) {
+				$favorite = array_search('_$!<Favorite>!$_', $tags[$node->getId()], true) !== false;
+			}
+			$result[] = $this->formatNode($node, $favorite);
 		}
 
 		return new JSONResponse($result);
 	}
 
-	private function formatNode(Node $node) {
+	private function formatNode(Node $node, bool $favorite) {
 		return [
 			'name' => $node->getName(),
 			'mimetype' => $node->getMimetype(),
 			'etag' => $node->getEtag(),
 			'fileId' => $node->getId(),
 			'size' => $node->getSize(),
-			'hasPreview' => false, // TODO CHECK WITH PREVIEWMANAGER
-			'favorite' => false, // TODO CHECK THIS
+			'hasPreview' => $this->previewManager->isAvailable($node),
+			'favorite' => $favorite,
 			'modificationDate' => $node->getMTime(),
+			'directory' => $node instanceof Folder,
+			'permissions' => $node->getPermissions(),
+			'ocId' => $this->getOcId($node->getId()),
 		];
+	}
+
+	private function getOcId(int $id): string {
+		$instanceId = \OC_Util::getInstanceId();
+		$id = sprintf('%08d', $id);
+		return $id . $instanceId;
 	}
 }

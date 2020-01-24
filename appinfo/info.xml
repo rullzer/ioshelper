@@ -4,7 +4,7 @@
 	<name>ioshelper</name>
 	<summary>Small IOS app for file listing</summary>
 	<description>Small app to assist in the file listing in iOS extentions</description>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<licence>agpl</licence>
 
 	<author>Roeland Jago Douma</author>
@@ -16,7 +16,7 @@
 		<database>sqlite</database>
 		<database>mysql</database>
 		<database>pgsql</database>
-		<nextcloud min-version="17" max-version="18" />
+		<nextcloud min-version="17" max-version="19" />
 	</dependencies>
 
 </info>
