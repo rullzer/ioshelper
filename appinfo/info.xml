@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <info>
 	<id>ioshelper</id>
-	<name>ioshelper</name>
-	<summary>Small IOS app for file listing</summary>
+	<name>Paginated file listing</name>
+	<summary>Small app to help with listing in low memory situation</summary>
 	<description>Small app to assist in the file listing in iOS extentions</description>
 	<version>0.0.2</version>
 	<licence>agpl</licence>
