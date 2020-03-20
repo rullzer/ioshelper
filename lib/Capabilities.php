@@ -42,6 +42,7 @@ class Capabilities implements ICapability {
 		return [
 			'files' => [
 				'pagination' => [
+					'version' => 1,
 					'endpoint' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.files.list')
 				]
 			]
