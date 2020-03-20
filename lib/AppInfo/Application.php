@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 /**
- * @author Joas Schilling <coding@schilljs.com>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
- * @copyright Copyright (c) 2018, Joas Schilling <coding@schilljs.com>
+ * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
  *
@@ -23,18 +23,15 @@ declare(strict_types=1);
 
 namespace OCA\IOSHelper\AppInfo;
 
-use OCA\TwoFactorNextcloudNotification\Event\StateChanged;
-use OCA\TwoFactorNextcloudNotification\Listener\IListener;
-use OCA\TwoFactorNextcloudNotification\Listener\RegistryUpdater;
-use OCA\TwoFactorNextcloudNotification\Notification\Notifier;
+use OCA\IOSHelper\Capabilities;
 use OCP\AppFramework\App;
-use Symfony\Component\EventDispatcher\Event;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Application extends App {
 	const APP_ID = 'ioshelper';
 
 	public function __construct() {
 		parent::__construct(self::APP_ID);
+
+		$this->getContainer()->registerCapability(Capabilities::class);
 	}
 }
