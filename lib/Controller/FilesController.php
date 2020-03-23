@@ -68,17 +68,17 @@ class FilesController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function list(string $dir, int $offset = 0, int $limit = 250): JSONResponse {
-		$nodes = $this->getNodes($dir);
+		$userFolder = $this->rootFolder->getUserFolder($this->userId);
+
+		$nodes = $this->getNodes($userFolder, $dir);
 		$nodes = $this->offsetAndLimit($nodes, $offset, $limit);
 
 		$tagger = $this->tagManager->load('files');
 
-		return $this->formatNodes($nodes, $tagger);
+		return $this->formatNodes($userFolder, $nodes, $tagger);
 	}
 
-	private function getNodes(string $dir): iterable {
-		$userFolder = $this->rootFolder->getUserFolder($this->userId);
-
+	private function getNodes(Folder $userFolder, string $dir): iterable {
 		$folder = $userFolder->get($dir);
 
 		//TODO error handling
@@ -86,6 +86,8 @@ class FilesController extends Controller {
 		if ($folder instanceof File) {
 			return [];
 		}
+
+		yield $folder;
 
 		/** @var Folder $folder */
 		$nodes = $folder->getDirectoryListing();
@@ -109,7 +111,7 @@ class FilesController extends Controller {
 		}
 	}
 
-	private function formatNodes(iterable $nodes, ITags $tagger): JSONResponse {
+	private function formatNodes(Folder $userFolder, iterable $nodes, ITags $tagger): JSONResponse {
 		$result = [];
 
 		foreach ($nodes as $node) {
@@ -118,14 +120,15 @@ class FilesController extends Controller {
 			if (isset($tags[$node->getId()])) {
 				$favorite = array_search('_$!<Favorite>!$_', $tags[$node->getId()], true) !== false;
 			}
-			$result[] = $this->formatNode($node, $favorite);
+			$result[] = $this->formatNode($userFolder, $node, $favorite);
 		}
 
 		return new JSONResponse($result);
 	}
 
-	private function formatNode(Node $node, bool $favorite) {
+	private function formatNode(Folder $userFolder, Node $node, bool $favorite) {
 		return [
+			'path' => $userFolder->getRelativePath($node->getPath()),
 			'name' => $node->getName(),
 			'mimetype' => $node->getMimetype(),
 			'etag' => $node->getEtag(),
