@@ -67,10 +67,11 @@ class FilesController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	public function list(string $dir, int $offset = 0, int $limit = 250): JSONResponse {
+	public function list(string $dir, int $offset = 0, int $limit = 250, string $sort = 'name', string $order = 'asc'): JSONResponse {
 		$userFolder = $this->rootFolder->getUserFolder($this->userId);
 
 		$nodes = $this->getNodes($userFolder, $dir);
+		$nodes = $this->sort($nodes, $sort, $order);
 		$nodes = $this->offsetAndLimit($nodes, $offset, $limit);
 
 		$tagger = $this->tagManager->load('files');
@@ -92,6 +93,36 @@ class FilesController extends Controller {
 		/** @var Folder $folder */
 		$nodes = $folder->getDirectoryListing();
 		yield from $nodes;
+	}
+
+	private function sort(iterable $nodes, string $sort, string $order): iterable {
+
+		$sortName = function(Node $a, Node $b) use ($sort, $order): int {
+			// Sort
+			if ($sort === 'mtime') {
+				$result = $a->getMTime() - $b->getMTime();
+			} else if ($sort === 'size') {
+				$result = $a->getSize() - $b->getSize();
+			} else if ($sort === 'mimetype') {
+				$result = strcmp($a->getMimetype(), $b->getMimetype());
+			} else  {
+				$result = strcmp($a->getName(), $b->getName());
+			}
+
+			// Flip on desc
+			if ($order === 'desc') {
+				$result = -$result;
+			}
+
+			return $result;
+		};
+
+		$nodeArr = iterator_to_array($nodes);
+		uasort($nodeArr, $sortName);
+
+		foreach ($nodeArr as $node) {
+			yield $node;
+		}
 	}
 
 	private function offsetAndLimit(iterable $nodes, int $offset, int $limit): iterable {
