@@ -4,7 +4,7 @@
 	<name>Paginated file listing</name>
 	<summary>Small app to help with listing in low memory situation</summary>
 	<description>Small app to assist in the file listing in iOS extentions</description>
-	<version>0.0.2</version>
+	<version>0.0.3</version>
 	<licence>agpl</licence>
 
 	<author>Roeland Jago Douma</author>
